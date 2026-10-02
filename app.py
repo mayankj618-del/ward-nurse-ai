@@ -80,16 +80,29 @@ st.caption("Real-Time Ward Decision Support System for Nurses & Pharmacists")
 st.divider()
 
 # Helper function to call OpenAI API
+import openai
+
 def call_ai(prompt):
-    if not client:
-        return "❌ Please enter a valid OpenAI API Key in the sidebar or Streamlit Secrets."
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.2
+    if not api_key:
+        return "❌ Missing API Key! Please enter your OpenAI API key in Streamlit Secrets or the sidebar."
+    
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.2
+        )
+        return response.choices[0].message.content
+
+    except openai.AuthenticationError:
+        return "❌ Error 401: Invalid API Key. Please verify your OpenAI key in Streamlit Secrets or platform.openai.com."
+    except openai.RateLimitError:
+        return "⚠️ Error 429: You have exceeded your OpenAI API quota or credit limit."
+    except Exception as e:
+        return f"⚠️ API Error: {str(e)}"
     )
     return response.choices[0].message.content
 
